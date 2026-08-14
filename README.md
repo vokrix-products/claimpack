@@ -18,3 +18,4 @@ Dashboard: https://claimpack.vokrix.co
 Vercel: claimpack
 Railway: 0bfefa63-83af-4af3-b467-9d54a3e078c2
 Railway: claimpack
+Cloudflare: claimpack.vokrix.co
