@@ -109,7 +109,6 @@ def poll():
                 "status": "eq.pending",
                 "product_id": f"eq.{PRODUCT_ID}",
                 "order": "created_at.asc",
-                "limit": "1",
             }
             resp = requests.get(
                 f"{SUPABASE_REST}/jobs",
