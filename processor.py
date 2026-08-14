@@ -101,6 +101,33 @@ def _alias_to_field(header):
     return _ALIAS_TO_FIELD.get(_normalize_header(header))
 
 
+def _clean_value(value):
+    """Strip markdown / formatting artifacts from extracted values.
+
+    Test documents frequently use markdown-style emphasis around field
+    values (e.g. "** WC-2024-08731", "**John**", "`ABC123`"). Normalize so
+    no raw asterisks, backticks or bullets leak into record titles/details.
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text:
+        return text
+
+    # strip wrapping bold/italic/code markers: **x**, *x*, `x`
+    text = re.sub(r"^\s*\*+\s*", "", text)
+    text = re.sub(r"\s*\*+\s*$", "", text)
+    text = re.sub(r"^`+|`+$", "", text)
+
+    # remove any remaining asterisk runs inside the value
+    text = re.sub(r"\*+", "", text)
+
+    # remove markdown header markers and list bullets at the start
+    text = re.sub(r"^\s*(#{1,6}\s*|[-•]\s*|>\s*)", "", text)
+
+    return text.strip()
+
+
 def _parse_date(value):
     if value is None:
         return None
@@ -180,7 +207,7 @@ def _parse_key_value(text):
 
         field = _alias_to_field(key)
         if field:
-            record[field] = value.strip()
+            record[field] = _clean_value(value)
 
     if record:
         return [record]
@@ -212,7 +239,7 @@ def _parse_claims(text):
         record = {}
         for field, value in zip(mapped_header, row):
             if field:
-                record[field] = str(value).strip()
+                record[field] = _clean_value(value)
 
         if any(record.get(field) for field in record):
             records.append(record)
@@ -280,7 +307,7 @@ def _build_record_from_flat(data):
     details = {}
     for field in EXTRACTED_FIELDS:
         if field in data:
-            details[field] = data.get(field)
+            details[field] = _clean_value(data.get(field))
 
     title = _build_title(details)
     due_date = _iso_date(details.get("warranty_expiration_date")) or _iso_date(
@@ -299,11 +326,16 @@ def _build_record_from_flat(data):
 def _make_record_from_dict(data):
     if isinstance(data, dict) and "details" in data and "title" in data and "status" in data:
         details = data.get("details") or {}
+        if isinstance(details, dict) and isinstance(details.get("details"), dict):
+            # LLM sometimes returns a redundantly nested "details" object;
+            # flatten it so extracted fields sit at the top level.
+            inner = details.pop("details")
+            details.update(inner)
         details.pop("title", None)
         details.pop("status", None)
         details.pop("due_date", None)
 
-        title = data.get("title") or _build_title(details)
+        title = _clean_value(data.get("title")) or _build_title(details)
         status = data.get("status")
         if status not in STATUS_VALUES:
             status = _derive_status(details)
