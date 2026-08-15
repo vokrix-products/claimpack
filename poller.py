@@ -73,7 +73,7 @@ def process_job(job):
                 "customer_id": customer_id,
                 "title": rec.get("title") or "Unknown Claimant",
                 "status": rec.get("status") or "Unreadable",
-                "details": rec,
+                "details": rec.get("details") if isinstance(rec.get("details"), dict) else rec,
                 "source_file_path": input_path,
             }
             if rec.get("due_date"):

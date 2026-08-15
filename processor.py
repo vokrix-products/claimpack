@@ -26,6 +26,7 @@ STATUS_VALUES = [
 
 EXTRACTED_FIELDS = [
     "claim_number",
+    "customer_name",
     "customer_first_name",
     "customer_last_name",
     "customer_email",
@@ -43,6 +44,9 @@ EXTRACTED_FIELDS = [
     "document_date",
     "document_status",
     "duplicate_claim_id",
+    "status",
+    "due_date",
+    "claim_amount",
 ]
 
 REQUIRED_FIELDS_FOR_VALID = [
@@ -67,6 +71,7 @@ DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
 FIELD_ALIASES = {
     "claim_number": ["claim_number", "claimnumber", "claim_no", "claimno", "claim_num", "claimid", "claim_id"],
+    "customer_name": ["customer_name", "customername", "customer", "name", "full_name", "fullname"],
     "customer_first_name": ["customer_first_name", "first_name", "firstname", "customerfirstname", "customer_firstname"],
     "customer_last_name": ["customer_last_name", "last_name", "lastname", "customerlastname", "customer_lastname"],
     "customer_email": ["customer_email", "email", "email_address", "customeremail"],
@@ -84,6 +89,9 @@ FIELD_ALIASES = {
     "document_date": ["document_date", "documentdate", "doc_date"],
     "document_status": ["document_status", "documentstatus", "doc_status"],
     "duplicate_claim_id": ["duplicate_claim_id", "duplicateclaimid", "duplicate_claim", "duplicate_id"],
+    "status": ["status", "claim_status", "claimstatus", "record_status"],
+    "due_date": ["due_date", "duedate", "due", "deadline"],
+    "claim_amount": ["claim_amount", "claimamount", "amount", "claim_value", "claimvalue", "total", "value"],
 }
 
 _ALIAS_TO_FIELD = {}
@@ -257,6 +265,10 @@ def _build_title(details):
     if first_name or last_name:
         return f"{first_name} {last_name}".strip()
 
+    customer_name = str(details.get("customer_name") or "").strip()
+    if customer_name:
+        return customer_name
+
     return str(
         details.get("claim_number")
         or details.get("order_id")
@@ -268,11 +280,19 @@ def _derive_status(details):
     if details.get("duplicate_claim_id"):
         return "Duplicate"
 
+    has_name = bool(
+        str(details.get("customer_first_name") or "").strip()
+        or str(details.get("customer_last_name") or "").strip()
+        or str(details.get("customer_name") or "").strip()
+    )
     missing_fields = [
         field
         for field in REQUIRED_FIELDS_FOR_VALID
-        if not str(details.get(field) or "").strip()
+        if field not in ("customer_first_name", "customer_last_name")
+        and not str(details.get(field) or "").strip()
     ]
+    if not has_name:
+        missing_fields.extend(["customer_first_name", "customer_last_name"])
     if missing_fields:
         return "Missing"
 
@@ -310,10 +330,13 @@ def _build_record_from_flat(data):
             details[field] = _clean_value(data.get(field))
 
     title = _build_title(details)
-    due_date = _iso_date(details.get("warranty_expiration_date")) or _iso_date(
-        details.get("claim_received_date")
+    due_date = (
+        _iso_date(details.get("due_date"))
+        or _iso_date(details.get("warranty_expiration_date"))
+        or _iso_date(details.get("claim_received_date"))
     )
-    status = _derive_status(details)
+    explicit_status = str(details.get("status") or "").strip()
+    status = explicit_status if explicit_status in STATUS_VALUES else _derive_status(details)
 
     return {
         "title": title,

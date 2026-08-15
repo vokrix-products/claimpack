@@ -13,6 +13,13 @@ VALID_CSV = (
     b"Unit overheats during charging,THERMAL,Replacement,claim_form,2024-06-01,complete,\n"
 )
 
+GENERIC_CSV = (
+    b"customer_name,claim_number,order_id,status,due_date,amount,description\n"
+    b"John Doe,WC-2025-00123,ORD-88213,Valid,2026-03-14,249.99,Warranty claim for laptop power supply\n"
+    b"Sarah Miller,WC-2025-00124,ORD-88214,Awaiting_Customer,2026-01-22,89.50,Replacement keyboard\n"
+    b"Miguel Alvarez,WC-2025-00125,ORD-88215,Missing,2025-11-30,159.00,Defective charging dock\n"
+)
+
 
 class ProcessorTests(unittest.TestCase):
     def test_valid_csv(self):
@@ -45,6 +52,16 @@ class ProcessorTests(unittest.TestCase):
         )
         records = process_file(data)
         self.assertEqual(records[0]["status"], "Expired")
+
+    def test_generic_headers_csv(self):
+        records = process_file(GENERIC_CSV)
+        self.assertEqual(len(records), 3)
+        self.assertEqual(records[0]["title"], "John Doe")
+        self.assertEqual(records[0]["status"], "Valid")
+        self.assertEqual(records[0]["due_date"], "2026-03-14")
+        self.assertEqual(records[0]["details"]["claim_amount"], "249.99")
+        self.assertEqual(records[1]["status"], "Awaiting_Customer")
+        self.assertEqual(records[2]["status"], "Missing")
 
 
 if __name__ == "__main__":
