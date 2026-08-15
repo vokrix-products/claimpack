@@ -423,6 +423,47 @@ def _build_unreadable_record(reason):
     ]
 
 
+def _extract_with_deepseek(text):
+    """LLM fallback extraction (README contract) when heuristic parsing finds nothing.
+
+    Returns a list of flat field dicts, or [] when DEEPSEEK_API_KEY is
+    unset or the model call fails (caller then falls back to Unreadable).
+    """
+    api_key = os.environ.get("DEEPSEEK_API_KEY")
+    if not api_key:
+        return []
+
+    try:
+        client = OpenAI(api_key=api_key, base_url=DEEPSEEK_BASE_URL)
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Extract warranty claim fields from the document text. "
+                        "Return ONLY a JSON array of objects. Allowed keys: "
+                        + ", ".join(EXTRACTED_FIELDS)
+                        + ". Omit any field that is absent. "
+                        "If the text contains multiple claims, return one object per claim."
+                    ),
+                },
+                {"role": "user", "content": text[:12000]},
+            ],
+            temperature=0,
+        )
+        content = response.choices[0].message.content or ""
+        content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
+        data = json.loads(content)
+        if isinstance(data, dict):
+            data = data.get("records") or data.get("claims") or [data]
+        if isinstance(data, list):
+            return [item for item in data if isinstance(item, dict)]
+        return []
+    except Exception:
+        return []
+
+
 def process_file(file_bytes: bytes) -> list[dict]:
     if not isinstance(file_bytes, bytes):
         return _build_unreadable_record("process_file expects bytes")
