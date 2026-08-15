@@ -18,7 +18,7 @@ async function writeAudit(action: string, entity: string, entityId: string, user
 async function fetchTasks(): Promise<Task[]> {
   const { data, error } = await supabase
     .from('records')
-    .select('id, title, status, label, priority, details, source_file_path, due_date')
+    .select('id, title, status, label, priority, details, source_file_path, due_date, is_demo')
     .eq('product_id', PRODUCT_ID)
     .order('created_at', { ascending: false })
 
@@ -33,6 +33,7 @@ async function fetchTasks(): Promise<Task[]> {
     details: row.details ?? null,
     source_file_path: row.source_file_path ?? null,
     due_date: row.due_date ?? null,
+    is_demo: row.is_demo ?? false,
   }))
 }
 

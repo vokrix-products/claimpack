@@ -16,6 +16,8 @@ export const taskSchema = z.object({
   source_file_path: z.string().nullable().optional(),
   // Optional deadline/expiration/renewal date, if this product has one.
   due_date: z.string().nullable().optional(),
+  // True for sample rows seeded for new accounts (demo data).
+  is_demo: z.boolean().nullable().optional(),
 })
 
 export type Task = z.infer<typeof taskSchema>

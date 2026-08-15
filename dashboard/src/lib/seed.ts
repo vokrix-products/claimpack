@@ -3,6 +3,8 @@ import { supabase, PRODUCT_ID } from '@/lib/supabase'
 // Sample claims seeded for brand-new accounts so the dashboard is never
 // empty on first login. Only inserted when the user has zero records for
 // this product. Dates are relative to "now" so the demo always looks live.
+// All seeded rows carry is_demo = true so the UI can clearly label them
+// as sample data.
 export async function seedSampleClaims(userId: string): Promise<void> {
   const { count, error: countError } = await supabase
     .from('records')
@@ -157,6 +159,7 @@ export async function seedSampleClaims(userId: string): Promise<void> {
     details: s.details,
     due_date: s.due_date,
     created_at: s.created_at,
+    is_demo: true,
   }))
 
   const { error } = await supabase.from('records').insert(payload)

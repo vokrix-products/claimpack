@@ -19,7 +19,7 @@ import { Overview } from './components/overview'
 import { RecentActivity } from './components/recent-activity'
 import { UpcomingExpirations } from './components/upcoming-expirations'
 import { useDashboardStats } from './data/dashboard'
-import { supabase } from '@/lib/supabase'
+import { supabase, PRODUCT_ID } from '@/lib/supabase'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NumberTicker } from '@/components/magicui/number-ticker'
 
@@ -40,6 +40,8 @@ function Trend({ current, previous }: { current: number; previous: number }) {
 export function Dashboard() {
   const { data, isLoading } = useDashboardStats()
   const [showUpgradeBanner, setShowUpgradeBanner] = useState(false)
+  const [showDemoBanner, setShowDemoBanner] = useState(false)
+  const [demoUserId, setDemoUserId] = useState<string | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -48,6 +50,39 @@ export function Dashboard() {
       setTimeout(() => setShowUpgradeBanner(true), 0)
     }
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user || cancelled) return
+        if (localStorage.getItem(`cp_demo_banner_dismissed_${user.id}`)) return
+        const { count } = await supabase
+          .from('records')
+          .select('id', { count: 'exact', head: true })
+          .eq('product_id', PRODUCT_ID)
+          .eq('customer_id', user.id)
+          .eq('is_demo', true)
+        if (!cancelled && count && count > 0) {
+          setDemoUserId(user.id)
+          setShowDemoBanner(true)
+        }
+      } catch {}
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  function dismissDemoBanner() {
+    setShowDemoBanner(false)
+    if (demoUserId) {
+      localStorage.setItem(`cp_demo_banner_dismissed_${demoUserId}`, '1')
+    }
+  }
 
   async function handleRefreshSession() {
     await supabase.auth.refreshSession()
@@ -74,6 +109,20 @@ export function Dashboard() {
               className='ml-4 font-medium underline underline-offset-2 hover:no-underline'
             >
               Refresh now
+            </button>
+          </div>
+        )}
+        {showDemoBanner && (
+          <div className='mb-4 flex items-center justify-between gap-4 rounded-lg border border-warning bg-warning/10 px-4 py-3 text-sm text-warning'>
+            <span>
+              You're viewing <strong>sample claims</strong>. Upload your own files to
+              replace them, or delete any sample with the trash icon.
+            </span>
+            <button
+              onClick={dismissDemoBanner}
+              className='shrink-0 font-medium underline underline-offset-2 hover:no-underline'
+            >
+              Dismiss
             </button>
           </div>
         )}

@@ -169,7 +169,17 @@ export const tasksColumns: ColumnDef<Task>[] = [
     header: () => <span className='text-xs text-muted-foreground'>Source</span>,
     cell: ({ row }) => {
       const path = row.original.source_file_path
-      if (!path) return null
+      if (!path) {
+        // Seeded sample rows have no source document — label them as demo.
+        if (row.original.is_demo) {
+          return (
+            <Badge variant='outline' className='text-xs text-muted-foreground'>
+              Demo
+            </Badge>
+          )
+        }
+        return null
+      }
       return (
         <Button
           variant='ghost'
