@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table'
-import { ExternalLink } from 'lucide-react'
+import { type ColumnDef, type Row } from '@tanstack/react-table'
+import { ExternalLink, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { statuses, severityToBadgeVariant } from '../data/data'
 import { type Task } from '../data/schema'
 import { DataTableRowActions } from './data-table-row-actions'
+import { useTasks } from './tasks-provider'
 
 async function openSourceFile(path: string) {
   const { data, error } = await supabase.storage
@@ -32,6 +33,27 @@ function formatDueDate(iso: string | null | undefined): string | null {
   if (diffDays < 0) return `${label} (overdue)`
   if (diffDays <= 30) return `${label} (${diffDays}d)`
   return label
+}
+
+function RowActionsCell({ row }: { row: Row<Task> }) {
+  const { setOpen, setCurrentRow } = useTasks()
+  return (
+    <div className='flex items-center justify-end gap-1'>
+      <Button
+        variant='ghost'
+        size='sm'
+        className='h-8 w-8 p-0 text-muted-foreground hover:text-destructive'
+        onClick={() => {
+          setCurrentRow(row.original)
+          setOpen('delete')
+        }}
+        aria-label='Delete claim'
+      >
+        <Trash2 className='size-4' />
+      </Button>
+      <DataTableRowActions row={row} />
+    </div>
+  )
 }
 
 export const tasksColumns: ColumnDef<Task>[] = [
@@ -166,6 +188,6 @@ export const tasksColumns: ColumnDef<Task>[] = [
 
   {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row }) => <RowActionsCell row={row} />,
   },
 ]
