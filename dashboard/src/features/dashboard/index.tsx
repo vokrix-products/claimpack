@@ -13,7 +13,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { JobsCard } from '@/features/jobs/components/jobs-card'
 import { NotificationsBell } from '@/components/notifications-bell'
-import { PRODUCT_ARCHETYPE } from '@/product-config'
+import { PRODUCT_ARCHETYPE, RECORDS_LABEL } from '@/product-config'
 import { ReportCard } from './components/report-card'
 import { Overview } from './components/overview'
 import { RecentActivity } from './components/recent-activity'
@@ -22,6 +22,8 @@ import { useDashboardStats } from './data/dashboard'
 import { supabase } from '@/lib/supabase'
 import { Skeleton } from '@/components/ui/skeleton'
 import { NumberTicker } from '@/components/magicui/number-ticker'
+
+const recordsLower = RECORDS_LABEL.toLowerCase()
 
 function Trend({ current, previous }: { current: number; previous: number }) {
   if (previous === 0 && current === 0) return null
@@ -35,9 +37,6 @@ function Trend({ current, previous }: { current: number; previous: number }) {
   )
 }
 
-// PRODUCT_CUSTOMIZE: card titles below describe generic record
-// tracking. IngestWatch monitors scheduled ingestion sources, so the
-// cards read as source health rather than generic record counts.
 export function Dashboard() {
   const { data, isLoading } = useDashboardStats()
   const [showUpgradeBanner, setShowUpgradeBanner] = useState(false)
@@ -79,7 +78,7 @@ export function Dashboard() {
           </div>
         )}
         <div className='mb-2 flex items-center justify-between space-y-2'>
-          <h1 className='text-2xl font-bold tracking-tight'>Ingestion Monitor</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>{RECORDS_LABEL} Overview</h1>
         </div>
         <div className='space-y-4'>
           <JobsCard />
@@ -87,7 +86,7 @@ export function Dashboard() {
           <div className='grid gap-4 sm:grid-cols-3'>
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>Sources Monitored</CardTitle>
+                <CardTitle className='text-sm font-medium'>Total {RECORDS_LABEL}</CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -121,7 +120,7 @@ export function Dashboard() {
             </Card>
             <Card>
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>Runs This Week</CardTitle>
+                <CardTitle className='text-sm font-medium'>Added This Week</CardTitle>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
@@ -140,7 +139,7 @@ export function Dashboard() {
           <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
             <Card className='col-span-1 lg:col-span-4'>
               <CardHeader>
-                <CardTitle>Source Health</CardTitle>
+                <CardTitle>{RECORDS_LABEL} by Status</CardTitle>
               </CardHeader>
               <CardContent className='ps-2'>
                 <Overview />
@@ -149,7 +148,7 @@ export function Dashboard() {
             <Card className='col-span-1 lg:col-span-3'>
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest source runs and updates</CardDescription>
+                <CardDescription>Latest uploaded {recordsLower} and updates</CardDescription>
               </CardHeader>
               <CardContent>
                 <RecentActivity />
@@ -158,8 +157,8 @@ export function Dashboard() {
           </div>
           <Card>
             <CardHeader>
-              <CardTitle>Upcoming Runs</CardTitle>
-              <CardDescription>Sources with a scheduled run in the next 90 days</CardDescription>
+              <CardTitle>Upcoming Expirations</CardTitle>
+              <CardDescription>{RECORDS_LABEL} expiring in the next 90 days</CardDescription>
             </CardHeader>
             <CardContent>
               <UpcomingExpirations />
