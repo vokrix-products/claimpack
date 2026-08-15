@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { syncAuthFromSession } from '@/stores/auth-store'
-import { supabase } from '@/lib/supabase'
+import { supabase, PRODUCT_ID } from '@/lib/supabase'
+import { seedSampleClaims } from '@/lib/seed'
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -10,15 +11,22 @@ export const Route = createFileRoute('/_authenticated')({
       throw redirect({ to: '/sign-up' })
     }
     await syncAuthFromSession()
-    // Cross-product sign-out guard removed: users reach this dashboard from
-    // this product's own URL and auth flow; entitlements are enforced at
-    // paywall/checkout time, not by killing otherwise-valid sessions.
+    // Seed sample claims once per user so new accounts are never empty.
+    const seedKey = `cp_seeded_${data.session.user.id}`
+    if (!localStorage.getItem(seedKey)) {
+      try {
+        await seedSampleClaims(data.session.user.id)
+        localStorage.setItem(seedKey, '1')
+      } catch (e) {
+        console.error('sample claim seeding failed', e)
+      }
+    }
     // Write audit log for session start (once per browser session)
     const auditKey = `audit_session_${data.session.user.id}`
     if (!sessionStorage.getItem(auditKey)) {
       sessionStorage.setItem(auditKey, '1')
       void supabase.from('audit_log').insert({
-        product_id: import.meta.env.VITE_PRODUCT_ID,
+        product_id: PRODUCT_ID,
         customer_id: data.session.user.id,
         action: 'session.started',
         entity: 'auth',
