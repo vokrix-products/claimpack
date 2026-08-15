@@ -51,7 +51,7 @@ export function useJobs() {
 
 // PRODUCT_CUSTOMIZE: job_type defaults to 'process_upload'. Products with
 // multiple distinct upload types (rare) can pass a different value.
-const TRIAL_LIMIT = 3
+const TRIAL_LIMIT = 10
 
 export function useTrialUsage() {
   const user = useAuthStore((state) => state.auth.user)
