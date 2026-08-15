@@ -29,22 +29,19 @@ export const severityToBadgeVariant: Record<Severity, 'destructive' | 'warning' 
   neutral: 'secondary',
 }
 
-// PRODUCT_CUSTOMIZE: replace this list with the real statuses this product
-// produces (must match exactly what the backend poller writes to
-// records.status). Every status must declare a severity tier above. Default
-// values below are generic placeholders only — do not ship as-is.
-// __STATUSES_BLOCK_START__
+// ClaimPack statuses — must match exactly what the backend poller writes to
+// records.status (see README output contract).
 export const statuses: {
   label: string
   value: string
   icon: typeof TriangleAlert
   severity: Severity
 }[] = [
-  { label: 'Valid', value: 'valid:good', icon: CircleCheckBig, severity: 'good' as Severity },
-  { label: 'Missing', value: 'missing:critical', icon: TriangleAlert, severity: 'critical' as Severity },
-  { label: 'Expired', value: 'expired:warning', icon: Clock, severity: 'warning' as Severity },
-  { label: 'Empty', value: 'empty:warning', icon: Clock, severity: 'warning' as Severity },
-  { label: 'Flagged', value: 'flagged:warning', icon: Clock, severity: 'warning' as Severity },
-  { label: 'Failed', value: 'failed:critical', icon: TriangleAlert, severity: 'critical' as Severity },
+  { label: 'Valid', value: 'Valid', icon: CircleCheckBig, severity: 'good' as Severity },
+  { label: 'Missing', value: 'Missing', icon: TriangleAlert, severity: 'critical' as Severity },
+  { label: 'Expired', value: 'Expired', icon: Clock, severity: 'warning' as Severity },
+  { label: 'Flagged', value: 'Flagged', icon: TriangleAlert, severity: 'warning' as Severity },
+  { label: 'Awaiting Customer', value: 'Awaiting_Customer', icon: Clock, severity: 'warning' as Severity },
+  { label: 'Duplicate', value: 'Duplicate', icon: Clock, severity: 'neutral' as Severity },
+  { label: 'Unreadable', value: 'Unreadable', icon: Clock, severity: 'warning' as Severity },
 ]
-// __STATUSES_BLOCK_END__
