@@ -156,7 +156,6 @@ def scan_expirations():
         "product_id": f"eq.{PRODUCT_ID}",
         "is_demo": "eq.false",
         "due_date": f"lte.{window_end}",
-        "not.is": "due_date,null",
         "limit": "500",
     }
     resp = requests.get(
