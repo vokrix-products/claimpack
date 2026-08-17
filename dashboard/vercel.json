@@ -1,3 +1,6 @@
 {
-  "rewrites": [{"source": "/(.*)", "destination": "/index.html"}]
+  "rewrites": [
+    { "source": "/create-checkout-session", "destination": "https://web-production-6adc6.up.railway.app/create-checkout-session" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

@@ -29,7 +29,9 @@ import {
 import { AnimatedCircularProgressBar } from '@/components/magicui/animated-circular-progress-bar'
 import { connectGitHub, useGithubConnection } from '@/lib/github'
 
-const BILLING_WEBHOOK_URL = 'https://web-production-6adc6.up.railway.app'
+// Same-origin: Vercel rewrites /create-checkout-session to the shared billing
+// service server-side, so the browser never hits cross-origin CORS.
+const BILLING_WEBHOOK_URL = ''
 const PRICE_ID = (import.meta.env.VITE_STRIPE_PRICE_ID as string) ?? ''
 const PRODUCT_ID_VALUE = import.meta.env.VITE_PRODUCT_ID as string
 
